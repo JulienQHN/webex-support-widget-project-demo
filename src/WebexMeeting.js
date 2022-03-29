@@ -28,14 +28,14 @@ function WebexMeeting({ webexToken }) {
     destinationType: destinationTypes.SPACEID,
     destinationId: spaceWidgetRoomSelected,
     composerActions: {
-      attachFiles: true,
+      attachFiles: false,
     },
     initialActivity: "message",
     spaceActivities: {
-      files: true,
-      meet: true,
+      files: false,
+      meet: false,
       message: true,
-      people: true,
+      people: false,
     },
     logLevel: true,
     showSubmitButton: true,

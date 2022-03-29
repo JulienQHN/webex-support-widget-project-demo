@@ -1,5 +1,6 @@
 import { React, useEffect, useState } from "react";
 import { Button, Icon, ListSeparator } from "@momentum-ui/react";
+import SpaceWidget, { destinationTypes } from "@webex/widget-space";
 import PropTypes from "prop-types";
 import moment from "moment";
 import axios from "axios";
@@ -17,6 +18,7 @@ const data = JSON.stringify({
 function ListTeam({ webexToken }) {
   const [listTeam, setlistTeams] = useState([]);
   const [pplRooms, setpplRooms] = useState([]);
+  const [spaceWidgetRoomSelected, setspaceWidgetRoomSelected] = useState("");
   const onsetListTeam = "https://webexapis.com/v1/teams";
   const onsetMemberTeam = "https://webexapis.com/v1/team/memberships?teamId=";
   const onsetMemberMail = "https://webexapis.com/v1/meetings";
@@ -50,6 +52,7 @@ function ListTeam({ webexToken }) {
     });
   }
 
+  // Fonction réservé aux comptes Webex Payant
   function startMemberCall(mailMember) {
     const MemberMailGET = {
       method: "POST",
@@ -70,6 +73,31 @@ function ListTeam({ webexToken }) {
       console.log(items);
     });
   }
+
+  function callbackOpenChat(detail) {
+    console.log(detail);
+    setspaceWidgetRoomSelected(detail, (key) => key + 1);
+  }
+
+  const spaceWidgetProps = {
+    accessToken: webexToken,
+    destinationType: destinationTypes.USERID,
+    destinationId: spaceWidgetRoomSelected,
+    composerActions: {
+      attachFiles: true,
+    },
+    initialActivity: "message",
+    spaceActivities: {
+      files: true,
+      meet: true,
+      message: true,
+      people: true,
+    },
+    logLevel: true,
+    showSubmitButton: true,
+    sendMessageOnReturnKey: true,
+    setCurrentActivity: "people",
+  };
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -97,7 +125,7 @@ function ListTeam({ webexToken }) {
                 <th className="width1rem">Meeting</th>
               </tr>
             </thead>
-            <tbody class="md-data-table__tbody">
+            <tbody className="md-data-table__tbody">
               {listTeam.map((item) => (
                 <tr>
                   <td>{item.name}</td>
@@ -129,18 +157,27 @@ function ListTeam({ webexToken }) {
                 <th className="width1rem">Meeting</th>
               </tr>
             </thead>
-            <tbody class="md-data-table__tbody">
+            <tbody className="md-data-table__tbody">
               {pplRooms.map((item) => (
                 <tr>
                   <td>{item.personDisplayName}</td>
                   <td>{item.personEmail}</td>
                   <td>{moment(item.created).calendar()}</td>
                   <td>
+                    <a href={"webexteams://im?email=" + item.personEmail}>
+                      <Button
+                        children={<Icon name="icon-private-meeting_20" />}
+                        size={40}
+                        ariaLabel="Search"
+                        //onClick={() => startMemberCall(item.personEmail)}
+                        circle
+                      />
+                    </a>
                     <Button
-                      children={<Icon name="icon-private-meeting_20" />}
+                      children={<Icon name="icon-chat-group_20" />}
                       size={40}
                       ariaLabel="Search"
-                      onClick={() => startMemberCall(item.personEmail)}
+                      onClick={() => callbackOpenChat(item.personId)}
                       circle
                     />
                   </td>
@@ -151,6 +188,13 @@ function ListTeam({ webexToken }) {
         </div>
       </div>
       <ListSeparator />
+      {spaceWidgetRoomSelected == "" ? (
+        <></>
+      ) : (
+        <div className="WidgetChat">
+          <SpaceWidget {...spaceWidgetProps} key={spaceWidgetRoomSelected} />{" "}
+        </div>
+      )}
     </div>
   );
 }
